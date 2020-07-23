@@ -1,12 +1,14 @@
 import React, {Component} from 'react';
 import InputForm from './components/InputForm';
 
+import axios from 'axios';
+
 
 class FormularioLivro extends Component {
 
   constructor(){
     super();
-    this.state = {title:'', subject:'', author:'', case:''};
+    this.state = {title:'teste', subject:'teste', author:'teste', case:'teste'};
 
     this.enviaForm = this.enviaForm.bind(this);
 
@@ -18,22 +20,33 @@ class FormularioLivro extends Component {
 
   enviaForm(evento){
     evento.preventDefault();
+
+    axios.post('http://localhost:3333/', {
+      title: this.state.title,
+      subject: this.state.subject,
+      author: this.state.author,
+      case: this.state.case, 
+    }).then(res => {
+      this.props.callbackAtualizaLista(res);
+    }).catch(err => {
+      console.error(err)
+    })
     
-  /*
-  $.ajax({
-    url: 'http://localhost:3333/',
-    contentType: 'application/json',
-    dataType: 'json',
-    type: 'post',
-    data:JSON.stringify({title:this.state.title, subject:this.state.email, author:this.state.author, case:this.state.case}),
-    success: function(resposta){
-      this.props.callbackAtualizaLista(resposta);
-    }.bind(this),
-    error: function(resposta){
-      console.log("erro");
-    }
-  })
-  */  
+    /*
+    $.ajax({
+      url: 'http://localhost:3333/',
+      contentType: 'application/json',
+      dataType: 'json',
+      type: 'post',
+      data:JSON.stringify({title:this.state.title, subject:this.state.email, author:this.state.author, case:this.state.case}),
+      success: function(resposta){
+        this.props.callbackAtualizaLista(resposta);
+      }.bind(this),
+      error: function(resposta){
+        console.log("erro");
+      }
+    })
+   */    
   }
 
   setTitle(evento){
@@ -54,7 +67,6 @@ class FormularioLivro extends Component {
 
 
     render(){
-
       return(
 
   <div id="main">
@@ -62,7 +74,7 @@ class FormularioLivro extends Component {
         <div className="box">
             <h1>Cadastrar Livro</h1>
 
-        <form className="form" method="POST" onSubmit={this.enviaForm.bind()} method="post">
+        <form className="form" method="POST" onSubmit={this.enviaForm} method="post">
 
                   <InputForm id="title" type="text" name="title" value={this.state.title} onChange={this.setTitle} label="Título"/>
                   <InputForm id="subject" type="text" name="subject" value={this.state.subject} onChange={this.setSubject} label="Assunto"/>
@@ -84,6 +96,15 @@ class FormularioLivro extends Component {
 
 class TabelaLivro extends Component{
 
+    deletaLivro(evento){
+      evento.preventDefault();
+
+      axios.delete('http://localhost:3333/:id')
+      .then(res => {console.log(res)})
+      .catch(err => {console.error(err)})
+
+    }
+
     render(){
 
       return(
@@ -100,13 +121,14 @@ class TabelaLivro extends Component{
         </thead>
         <tbody>
           {
-            this.props.lista.map(function(book){
+            this.props.lista.map(book => {
               return (
-                <tr key={book._id}>
+                <tr key={book._id} onClick={this.deletaLivro}>
                   <td>{book.title}</td>
                   <td>{book.subject}</td>
                   <td>{book.author}</td>
                   <td>{book.case}</td>
+                  <td><a href="#" >Deletar</a></td>
                 </tr>
               );
             })
@@ -129,11 +151,16 @@ export default class LivroBox extends Component{
   }
 
   componentDidMount(){
-
+        this.atualizaLista();
   }
 
-  atualizaLista(novaLista){
-    this.setState({ lista: novaLista})
+  atualizaLista(){  
+    axios.get('http://localhost:3333/books')
+    .then(novaLista => this.setState({ lista: novaLista.data}))
+    .catch(err => {
+      console.error(err)
+    })
+    
   }
 
   render(){
